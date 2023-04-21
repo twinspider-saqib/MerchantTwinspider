@@ -93,7 +93,8 @@ def pay_to_merchants
           order_id: merchant_order[:order_id],
           commission: commission,
           payment_to_merchant: payment_to_merchant,
-          payment_reference: key
+          payment_reference: key,
+          payment_date: Date.today()
         }
       end
     end
@@ -107,16 +108,10 @@ def print_day_disbursements
 end
 
 def start_program
-  # byebug
   read_orders_csv
-  # read_first_100k_orders
   read_merchants_csv
   pay_to_merchants
   print_day_disbursements
-  # while true
-  # pay_to_merchants
-  # end
-
 end
 
 start_program()
