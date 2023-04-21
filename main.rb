@@ -78,10 +78,9 @@ def pay_to_merchants
   @merchants.each do |merchant|
     live_on_date = merchant[1][:live_on]
     disbursement_frequency = merchant[1][:disbursement_frequency]
-    test_date = parse_str_to_date("2022-10-07")
 
     if disbursement_frequency == "DAILY" ||
-      (live_on_date.strftime("%A") == test_date.strftime("%A") && disbursement_frequency == "WEEKLY")
+      (live_on_date.strftime("%A") == Date.today.strftime("%A") && disbursement_frequency == "WEEKLY")
       merchant_disbursements = {}
       merchant_orders = @orders.select {|order| order[:merchant_reference] == merchant[0]}
       merchant_orders.each do |merchant_order|
