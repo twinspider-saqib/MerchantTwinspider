@@ -41,7 +41,7 @@ def read_first_100k_orders
     order = order_row.to_s.squish.split(";")
     @orders[index] = { order_id: index, merchant_reference: order[0], amount: order[1].to_i, created_at: order[2] }
     index += 1
-    break if index > 100000
+    break if index == 100000
   end
   puts "#{index} Orders found"
 end
@@ -80,7 +80,8 @@ def pay_to_merchants
     disbursement_frequency = merchant[1][:disbursement_frequency]
     test_date = parse_str_to_date("2022-10-07")
 
-    if disbursement_frequency == "DAILY" || (live_on_date.day == test_date.day && disbursement_frequency == "WEEKLY")
+    if disbursement_frequency == "DAILY" ||
+      (live_on_date.strftime("%A") == test_date.strftime("%A") && disbursement_frequency == "WEEKLY")
       merchant_disbursements = {}
       merchant_orders = @orders.select {|order| order[:merchant_reference] == merchant[0]}
       merchant_orders.each do |merchant_order|
@@ -101,9 +102,29 @@ def pay_to_merchants
   end
 end
 
-def print_day_disbursements
-  @day_disbursements.each do |day_disbursement|
-    puts day_disbursement
+def set_year_wise_hash
+  @year_wise[@key_name] ||= {}
+  @year_wise[@key_name]['year'] ||= 0
+  @year_wise[@key_name]['number_disbursements'] ||= 0
+  @year_wise[@key_name]['commission'] ||= 0
+  @year_wise[@key_name]['payment_to_merchant'] ||= 0
+end
+
+def print_year_wise_disbursements
+  @year_wise = {}
+  @day_disbursements.each do |key, day_disbursement|
+    @key_name = day_disbursement[:payment_date].year
+    set_year_wise_hash
+    @year_wise[@key_name]['year'] = @key_name
+    @year_wise[@key_name]['number_disbursements'] += 1
+    @year_wise[@key_name]['commission'] += day_disbursement[:commission]
+    @year_wise[@key_name]['payment_to_merchant'] += day_disbursement[:payment_to_merchant]
+  end
+
+  # make table header
+  puts "Year    Num Disbursements     Amount Dis to merchants     Amount of Order fees"
+  @year_wise.each do |key, year_data|
+    puts "#{year_data["year"]}     #{year_data["number_disbursements"]}                  #{(year_data["payment_to_merchant"]).round(2)} €                    #{(year_data["commission"]).round(2)} €"
   end
 end
 
@@ -111,7 +132,7 @@ def start_program
   read_orders_csv
   read_merchants_csv
   pay_to_merchants
-  print_day_disbursements
+  print_year_wise_disbursements
 end
 
 start_program()
